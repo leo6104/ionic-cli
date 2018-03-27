@@ -4,7 +4,7 @@ import * as path from 'path';
 
 import { CommandGroup, CommandMetadata } from '@ionic/cli-utils';
 import { Command } from '@ionic/cli-utils/lib/command';
-import { fsReadFile } from '@ionic/cli-framework/utils/fs';
+import { fsReadFile, fsWriteFile } from '@ionic/cli-framework/utils/fs';
 
 import * as klaw from 'klaw';
 
@@ -28,8 +28,8 @@ export class DeployManifestCommand extends Command {
 
   async run(): Promise<void> {
     const manifest = await this.getFilesAndSizesAndHashesForGlobPattern();
-
-    console.log(manifest);
+    await (manifest);
+    await fsWriteFile(path.resolve(this.buildDir, 'pro-manifest.json'), JSON.stringify(manifest), { encoding: 'utf8' });
   }
 
   private async getFilesAndSizesAndHashesForGlobPattern(): Promise<DeployManifestItem[]> {
@@ -58,9 +58,9 @@ export class DeployManifestCommand extends Command {
   }
 
   private getHash(data: Buffer) {
-    var md5 = crypto.createHash('md5');
-    md5.update(data);
+    var sha256 = crypto.createHash('sha256');
+    sha256.update(data);
 
-    return md5.digest('hex');
+    return sha256.digest('base64');
   }
 }
