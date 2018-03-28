@@ -28,7 +28,6 @@ export class DeployManifestCommand extends Command {
 
   async run(): Promise<void> {
     const manifest = await this.getFilesAndSizesAndHashesForGlobPattern();
-    await (manifest);
     await fsWriteFile(path.resolve(this.buildDir, 'pro-manifest.json'), JSON.stringify(manifest), { encoding: 'utf8' });
   }
 
@@ -48,17 +47,17 @@ export class DeployManifestCommand extends Command {
   }
 
   private async getFileAndSizeAndHashForFile(file: string, stat: fs.Stats): Promise<DeployManifestItem> {
-    const buffer: any = await fsReadFile(file, {encoding: (null as any)});
+    const buffer: any = await fsReadFile(file, {encoding: (undefined as any)});
 
     return {
       file: path.relative(this.buildDir, file),
       size: stat.size,
-      hash: this.getHash(buffer)
+      hash: this.getHash(buffer),
     };
   }
 
   private getHash(data: Buffer) {
-    var sha256 = crypto.createHash('sha256');
+    const sha256 = crypto.createHash('sha256');
     sha256.update(data);
 
     return sha256.digest('base64');
