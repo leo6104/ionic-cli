@@ -11,7 +11,7 @@ export const ERROR_FILE_INVALID_JSON = 'FILE_INVALID_JSON';
 export const ERROR_OVERWRITE_DENIED = 'OVERWRITE_DENIED';
 
 export interface FSReadFileOptions {
-  encoding: string | null;
+  encoding: string;
   flag?: string;
 }
 
