@@ -9,9 +9,9 @@ import { fsReadFile, fsWriteFile } from '@ionic/cli-framework/utils/fs';
 import * as klaw from 'klaw';
 
 interface DeployManifestItem {
-  file: string;
+  href: string;
   size: number;
-  hash: string;
+  integrity: string;
 }
 
 export class DeployManifestCommand extends Command {
@@ -50,16 +50,19 @@ export class DeployManifestCommand extends Command {
     const buffer: any = await fsReadFile(file, {encoding: (undefined as any)});
 
     return {
-      file: path.relative(this.buildDir, file),
+      href: path.relative(this.buildDir, file),
       size: stat.size,
-      hash: this.getHash(buffer),
+      integrity: this.getIntegrity(buffer),
     };
   }
 
-  private getHash(data: Buffer) {
-    const sha256 = crypto.createHash('sha256');
-    sha256.update(data);
-
-    return sha256.digest('base64');
+  private getIntegrity(data: Buffer) {
+    return ['sha256', 'sha384', 'sha512']
+      .map(algorithm => {
+        const hash = crypto.createHash(algorithm);
+        hash.update(data);
+        return algorithm + '-' + hash.digest('base64');
+      })
+      .join(' ');
   }
 }
