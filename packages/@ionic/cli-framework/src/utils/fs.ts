@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import * as ncpType from 'ncp';
+import * as klawType from 'klaw';
 
 import { promisify } from './promise';
 import { compilePaths } from './path';
@@ -30,15 +31,31 @@ export const fsReadFile = promisify<string, string, FSReadFileOptions>(fs.readFi
 export const fsWriteFile = promisify<void, string, any, FSWriteFileOptions>(fs.writeFile);
 export const fsReadDir = promisify<string[], string>(fs.readdir);
 
-export async function readDir(filePath: string): Promise<string[]> {
-  try {
-    return await fsReadDir(filePath);
-  } catch (e) {
-    if (e.code === 'ENOENT') {
-      return [];
-    }
+export async function readDir(filePath: string, options?: { recursive?: boolean; klawOptions?: klawType.Options; }): Promise<string[]> {
+  options = options || {};
+  options.klawOptions = options.klawOptions || {};
 
-    throw e;
+  if (options.recursive) {
+    const klaw = await import('klaw');
+
+    return new Promise<string[]>((resolve, reject) => {
+      const items: string[] = [];
+
+      klaw(filePath, options.klawOptions)
+        .on('error', err => reject(err))
+        .on('data', item => items.push(item.path))
+        .on('end', () => resolve(items));
+    });
+  } else {
+    try {
+      return await fsReadDir(filePath);
+    } catch (e) {
+      if (e.code === 'ENOENT') {
+        return [];
+      }
+
+      throw e;
+    }
   }
 }
 
